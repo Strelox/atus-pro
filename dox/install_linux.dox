@@ -1,0 +1,73 @@
+/** \page install_linux.dox  Installation notes for Linux
+ * \section install_mpi Installation of MPI
+ * You can skip this step if you have an MPI implementation already installed. Typically this step is not required on clusters. <BR>
+ * Sources download link: <a href="http://www.open-mpi.org/software/ompi/v1.8/downloads/openmpi-1.8.5.tar.gz">Open MPI 1.8.5</a><br>
+ * 
+ * + ./configure  \--prefix=/opt/openmpi-1.8.5 \--enable-mpi-fortran
+ * + make -j
+ * + sudo make install
+ * + export PATH=$PATH:/opt/openmpi-1.8.5/bin
+ * + export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/openmpi-1.8.5/lib64
+ * + check the PATH with: which mpicc
+ * 
+ * \section install_gsl Installation of GSL 
+ * You can download the sources here:  <a href="ftp://ftp.gnu.org/gnu/gsl/gsl-1.16.tar.gz">gsl 1.16</a><br>
+ * 
+ * + ./configure \--prefix=/opt/gsl-1.16
+ * + make CFLAGS="-march=native -O3"
+ * + sudo make install
+ * 
+ * Our CMake configuration expects the library files to be in the subfolder lib not lib64. If it is not the case the you can just simply rename the subfolder.
+ *
+ * \section install_lapack Installation of LAPACK
+ * Sources download link: <a href="http://www.netlib.org/lapack/lapack-3.5.0.tgz">LAPACK 3.5.0</a><br>
+ * + mkdir build
+ * + cd build
+ * + cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_Fortran_FLAGS_RELEASE="-march=native -fpic -O3" -DCMAKE_INSTALL_PREFIX=/opt/lapack-3.5.0 ..
+ * 
+ * \section install_p4est Installation of p4est
+ * Sources download link: <a href="http://p4est.github.io/release/p4est-1.1.tar.gz">p4est 1.1</a><br>
+ * The p4est library requires MPI. 
+ * + ./configure \--prefix=/opt/p4est-1.1 \--enable-mpi \--enable-shared \--disable-vtk-binary \--without-blas
+ * + make CFLAGS="-O3 -march=native"
+ * + sudo make install
+ * * 
+ * If you encounter some problems during the compilation then try: export CC=mpicc 
+ *
+ * \section install_petsc Installation of PETSc
+ * Sources download link: <a href="http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.6.1.tar.gz">petsc 3.6.1</a><br>
+ * The PETSc library requires MPI and an working internet connection.
+ * + export PETSC_ARCH=x86_64 (in principle you can choose any arbitrary string)
+ * + ./configure \--prefix=/opt/petsc-3.6.1 \--with-shared-libraries \--with-x=0 \--with-debugging=0 \--with-mpi=1 \--download-hypre=yes \--download-fblaslapack=1 \--download-scalapack  \--download-mumps \--download-ptscotch
+ * + follow the instructions
+ *
+ * If the automated download is not possible, then you can download the following packages 
+ * + <a href="http://ftp.mcs.anl.gov/pub/petsc/externalpackages/fblaslapack-3.4.2.tar.gz">fblaslapack 3.4.2</a>
+ * + <a href="http://ftp.mcs.anl.gov/pub/petsc/externalpackages/scalapack-2.0.2.tgz">scalapack 2.0.2</a>
+ * + <a href="http://ftp.mcs.anl.gov/pub/petsc/externalpackages/hypre-2.10.0b-p1.tar.gz">hypre </a>
+ * + <a href="http://ftp.mcs.anl.gov/pub/petsc/externalpackages/scotch_6.0.3.tar.gz">scotch_6.0.3_esmumps</a>
+ * + <a href="http://ftp.mcs.anl.gov/pub/petsc/externalpackages/MUMPS_5.0.0-p1.tar.gz">MUMPS </a>
+ *
+ * and specify the location via \--download\-XXX=(path to the file).
+ * 
+ * \section install_dealii Installation of deal.ii
+ * Sources download link: <a href="https://github.com/dealii/dealii/releases/download/v8.3.0/dealii-8.3.0.tar.gz">deal.ii 8.2.1</a><br>
+ * The deal.ii library requires MPI.
+ * + mkdir build 
+ * + cd build 
+ * + cmake -DDEAL_II_WITH_UMFPACK=ON -DDEAL_II_WITH_LAPACK=ON -DLAPACK_DIR=/opt/lapack-3.5.0 -DPETSC_ARCH=x86_64 -DPETSC_DIR=/opt/petsc-3.6.1 -DP4EST_DIR=/opt/p4est-1.1 -DDEAL_II_WITH_THREADS=OFF -DDEAL_II_WITH_MPI=ON -DDEAL_II_WITH_HDF5=OFF -DCMAKE_INSTALL_PREFIX=/opt/deal.ii-8.3.0 ..
+ * + optional: In order to speed up the compilation you can use ccmake . and change the CMAKE_BUILD_TYPE to Release only.
+ * + make -j
+ * + sudo make install
+ *
+ * touch $HOME/.bashrc_atus_pro
+ * \verbatim
+   export PATH=$PATH:/opt/openmpi-1.8.4/bin:$HOME/bin
+   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/openmpi-1.8.4/lib64
+   export LD_LIBRARY_PATH:$LD_LIBRARY_PATH:/opt/gsl-1.16/lib64
+   export LD_LIBRARY_PATH:$LD_LIBRARY_PATH:/opt/p4est-1.1/lib64
+   export LD_LIBRARY_PATH:$LD_LIBRARY_PATH:/opt/petsc-3.6.1/lib
+   export LD_LIBRARY_PATH:$LD_LIBRARY_PATH:/opt/deal.ii-8.3.0/lib
+   \endverbatim
+ * source $HOME/.bashrc
+ */

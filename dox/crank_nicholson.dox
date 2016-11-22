@@ -1,0 +1,105 @@
+/** \page crank_nicholson.dox Crank-Nicolson real time propagation
+ * In order to advance the complex wave function \f$ \Psi \f$ from time \f$ t \f$ to \f$ t+\Delta t \f$ we have implemented the fully implicit Crank-Nicholson method
+ * for the time dependent Gross--Pitaevskii equation. This scheme is unitary in time and conserves the total number of particles and the total energy.
+ * The space and time discretized version of the Gross--Pitaevskii equation leads to a non linear set of equations which are numerically solved with the Newton method.
+ * In order to derive the system of equations, we start with the following ansatz
+ * \f[
+ * i \frac{\Psi(x,t+\Delta t )-\Psi(x,t)}{\Delta t} - \left( -\Delta + V + \gamma \left\vert \frac{\Psi(x,t+\Delta t )+\Psi(x,t)}{2} \right\vert^2 \right) \left(\frac{\Psi(x,t+\Delta t )+\Psi(x,t)}{2}\right) = 0.
+ * \f] 
+ * Due to the complex nature of our problem we need to split the differential equation into real and imaginary part.
+ * For the imaginary and real parts we introduce the following notation:
+ * \f[
+ * u_t := \text{Re}\,\Psi(x,t+\Delta t),\, v_t := \text{Im}\,\Psi(x,t+\Delta t),\, u := \text{Re}\,\Psi(x,t),\, \text{and } v := \text{Im}\,\Psi(x,t). 
+ * \f]
+ * 
+ * The Gross--Pitaevskii equation can be expressed as a system of two non linear coupled differential equations for the unknown functions \f$ u_t \f$ and \f$ v_t \f$ given by
+ * \f[
+ * \vec{F} \left[ u_t, v_t \right] := 
+ * \begin{pmatrix}
+ * u_t - u - \frac{\Delta t}{2} \left(-\Delta+V\right) \left(v_t+v\right) - \frac{\Delta t \gamma}{8} \left( \left(v_t+v\right)^2 + \left(u_t+u\right)^2 \right) \left(v_t+v\right) \\
+ * v_t - v + \frac{\Delta t}{2} \left(-\Delta+V\right) \left(u_t+u\right) + \frac{\Delta t \gamma}{8} \left( \left(v_t+v\right)^2 + \left(u_t+u\right)^2 \right) \left(u_t+u\right) 
+ * \end{pmatrix} = 0
+ * \f] 
+ * In order to solve this system
+ * we have to apply the Newton method. The iteration loop can be found in \link #realtime_propagation::MySolver::DoIter \endlink. The algorithm can be summarized in the following steps
+ *
+ * 
+ * <DIV class="one"><TABLE>
+ * <TR><TH>Preparation</TH></TR>
+ * <TR><TD>
+ * Set the loop counter \f$ k \leftarrow 0 \f$.<BR> 
+ * Set the initial guess \f$ u^0_t \f$ and \f$ v^0_t \f$. <BR>
+ * Assemble the right hand side \f$ \vec{F}\left[ u^0_t, v^0_t \right] \f$.
+ * </TD></TR>
+ * <TR><TH>Step 1</TH></TR>
+ * <TR><TD> Assemble the linear system \f$ J \vec{F} [ u_t^k, v_t^k ] \f$. 
+ * </TD></TR>
+ * <TR><TH>Step 2</TH></TR>
+ * <TR><TD>Find Newton direction \f$ \vec{d}^k \f$ by solving \f$ J \vec{F} [ u_t^k, v_t^k ] \vec{d}^k = \vec{F} [ u_t^k, v_t^k ] \f$</TD></TR>
+ * <TR><TH>Step 3</TH></TR>
+ * <TR><TD>Do the Newton step <BR>
+ * \f{align*}
+ * u_t^{k+1} &= u_t^k - d^k_1 \\
+ * v_t^{k+1} &= v_t^k - d^k_2 \text{.}
+ * \f} <BR>
+ * \f$ k \leftarrow k+1 \f$ <BR>
+ * </TD></TR>
+ * <TR><TH>Step 4</TH></TR>
+ * <TR><TD>Assemble the right hand side \f$ \vec{F} [ u_t^k, v_t^k ] \f$ and compute the residual of  \f$ \vec{F} [ u_t^k, v_t^k ] \f$.</TD></TR>
+ * <TR><TH>Step 5</TH></TR>
+ * <TR><TD>
+ * If the \f$ L_2 \f$ norm of the right hand side is smaller than \f$ 10^{-16} \f$, then set \f$ u \leftarrow u_t^k \f$ and \f$ v \leftarrow v_t^k \f$ and exit \link #realtime_propagation::MySolver::DoIter \endlink, <BR>
+ * else go to Step 1.
+ * </TD></TR>
+ * </TABLE></DIV>
+ *
+ * The right hand side for our newton method is given by the space and time discretized Gross--Pitaevskii equation which reads as follows in FEM description:
+ * \f[
+ * \left[ \vec{F}[ u_t^k, v_t^k ] \right]_i = \sum_K \sum_q w^K_q \begin{pmatrix}
+ * (u_t - u) g_i - \frac{\Delta t}{2} \nabla\left(v_t+v\right)\nabla g_i + \frac{\Delta t}{2} V \left(v_t+v\right) g_i - \frac{\Delta t \gamma}{8} \left( \left(v_t+v\right)^2 + \left(u_t+u\right)^2 \right) \left(v_t+v\right) g_i \\
+ * (v_t - v) h_i + \frac{\Delta t}{2} \nabla\left(u_t+u\right)\nabla h_i + \frac{\Delta t}{2}V \left(u_t+u\right) h_i + \frac{\Delta t \gamma}{8} \left( \left(v_t+v\right)^2 + \left(u_t+u\right)^2 \right) \left(u_t+u\right) h_i
+ * \end{pmatrix} \text{.}
+ * \f]
+ * 
+ * We sum over all cells \f$ K \f$ and over all quadrature points \f$ x_q^K \f$ of each cell. \f$ w_q^K \f$ is the weight of the quadrature formula evaluated  at \f$ x_q^K \f$ times 
+ * the Jacobian of the unit cell. \f$ g_i(x_q^K) \f$ are the test function for real part and \f$ h_i(x_q^K) \f$ are the test functions for the imaginary part. The Jacobian on the right hand side reads as follows:
+ * 
+ * \f[
+ * J^k_{ij} = \sum_{K,q} w_q^K
+ * \begin{pmatrix}
+ * \nabla g_j(x_q) \\
+ * \nabla h_j(x_q)
+ * \end{pmatrix}^T 
+ * \begin{pmatrix}
+ * 0 & -\frac{\Delta t}{2} \\
+ * \frac{\Delta t}{2} & 0
+ * \end{pmatrix} 
+ * \begin{pmatrix}
+ * \nabla g_i(x_q)\\
+ * \nabla h_i(x_q)
+ * \end{pmatrix}
+ * + w_q^K 
+ * \begin{pmatrix}
+ * g_j(x_q) \\ 
+ * h_j(x_q)
+ * \end{pmatrix}^T 
+ * \begin{pmatrix}
+ * 1-\frac{\Delta t \gamma}{4} a^+ b^+ & -\frac{\Delta t}{2} V - \frac{\Delta t \gamma}{4} \left( 3\left(b^+\right)^2 + \left(a^+\right)^2 \right) \\
+ * \frac{\Delta t}{2} V + \frac{\Delta t \gamma}{4} \left( \left(b^+\right)^2 + 3\left(a^+\right)^2 \right) & 1+\frac{\Delta t \gamma}{4} a^+ b^+
+ * \end{pmatrix}  
+ * \begin{pmatrix}
+ * g_i(x_q) \\ 
+ * h_i(x_q)
+ * \end{pmatrix} \text{.}
+ * \f]
+ * 
+ * \f$ a^+ :=\f$ m_Psi_t[0]+m_Psi[0]  and  \f$ a^- := \f$ m_Psi_t[0]-m_Psi[0]
+ *
+ * \f$ b^+ :=\f$ m_Psi_t[1]+m_Psi[1]  and  \f$ b^- := \f$ m_Psi_t[1]-m_Psi[1]
+ * 
+ * <DIV class="mynote">
+ * <B>Note on the stepsize \f$ \Delta t \f$</B><BR>
+ * Both real time propagation programs print out the ration \f$ \Delta t / \text{min} \Delta x^2 \f$ for information. To be on the safe side this ratio should be 
+ * less than \f$ \frac{1}{2} \f$.
+ * </DIV>
+ */

@@ -1,0 +1,55 @@
+/** @page my_newton_alg_cs.dox Our Newton method for cylinder symmetry
+ *
+ * breed_cs computes the  solutions of the stationary Gross--Pitaevskii equation which have 
+ * cylinder symmetry. The spatial dimension and the potential are not affected by CMake options. The form of the potential is fixed to 
+ * 
+ * \f[
+ * V(r,z) =\omega^2 \rho^2 + \beta z ,
+ * \f]
+ * 
+ * where \f$ \omega \f$ is the trapping frequency in radial direction and \f$ \beta \f$ is the dimensionless gravitational acceleration.
+ * The Gross--Pitaevskii equation in cylinder coordinates reads 
+ * \f[
+ * \left( -\partial_{\rho}^2-\frac{1}{\rho}\partial_{\rho}-\frac{1}{\rho^2}\partial_{\vartheta}^2-\partial_z^2 + V(r,z) - \mu + \gamma \vert\psi(\rho,\vartheta,z)\vert^2 \right) \psi(\rho,\vartheta,z) = 0 .
+ * \f]
+ * 
+ * In order to simplify our problem we choose the following ansatz
+ * \f[
+ * \psi(r,\vartheta,z) = \phi(r,z) \exp\left( i s \vartheta \right), \; \phi(r,z) \in R,
+ * \f]
+ * 
+ * which reduces the Gross--Pitaevskii equation to 
+ * \f[
+ * \left( -\partial_{\rho}^2-\frac{1}{\rho}\partial_{\rho}-\partial_z^2 + \omega^2 \rho^2 + \frac{s^2}{\rho^2} + \beta z - \mu + \gamma \phi(\rho,z)^2 \right) \phi(\rho,z) = 0 .
+ * \f]
+ * So we get essentially an effective trapping potential containing the centrifugal term \f$ s^2 / \rho^2  \f$, where \f$ s \in Z \f$ is the
+ * quantum number of the angular momentum. 
+ * 
+ * Multiplying the reduced equation with
+ * \f[
+ * 2\pi \int_{\Omega} dz \, d\rho \, \rho \, h(\rho,z),\, h(\rho,z) \in H^1_0(\Omega)
+ * \f]
+ * 
+ * from the left and applying Green's first identity we obtain the weak formulation 
+ * 
+ * \f[
+ * 2 \pi \int_{\Omega} dz \, d\rho \, \rho \, \left[ \partial_{\rho}\phi(\rho,z) \partial_{\rho} h(\rho,z) + \partial_z\phi(\rho,z) \partial_z h(\rho,z) + \left( \omega^2 \rho^2 + \frac{s^2}{\rho^2} + \beta z - \mu \right) \phi(\rho,z) h(\rho,z) + \gamma \phi^3(\rho,z) h(\rho,z) \right] = 0
+ * \f] 
+ * 
+ * of the Gross-Pitaevskii equation. If \f$ s=0 \f$ then we demand zero Dirichlet conditions on the whole boundary and if \f$ s \neq 0 \f$ then we demand 
+ * zero Neumann conditions at \f$ \rho=0 \f$ and zero Dirichlet conditions on the rest of the boundary. In both cases, the boundary term appears from setting the Green's first identity to zero, thus it is not written down explicitly.
+ * The technical difference between breed and breed_cs is the form of the potential, the inner product and the case differentiation for the boundary conditions at \f$ \rho = 0 \f$.
+ * 
+ * For the initial guess we use the eigenfunctions of the corresponding linear Schrödinger problem. 
+ * \f[
+ * \phi_{s,k,l} (r,\phi, z) = \sqrt{\frac{\omega^2 s!}{\pi (s+k)!}} \exp \left( -\omega^2 r^2 / 2 \right) \left( \omega r \right)^s \text{L}^s_k \left( \omega^2 r^2 \right) \exp\left( is\phi \right) \bar{\text{Ai}}( \beta^{1/3} z + \xi_l )
+ * \f]
+ * The eigenfunctions of the harmonic oscillator in polar coordinates are expressed in terms of the associated Laguerre polynomials \f$ L^s_k \f$. 
+ * The eigenfunctions for the linear potential are the shifted and normalised Airy Ai functions. The bar indicates normalisation. \f$ \xi_n \f$ is n-th zero of the Airy Ai function.
+ * The spectrum is given by the following expression:
+ * \f[
+ * \mu_{s,k,l} = \omega (s+2k+1) + \beta^{2/3} \vert \xi_l \vert. 
+ * \f]
+ *
+ * The quantum numbers \f$ s \in Z, k \in N, l \in N^+ \f$ can be identified with the parameters QN1_x, QN1_y, and QN1_z. 
+ */

@@ -1,0 +1,19 @@
+/** \page tested_platforms.dox Tested platforms
+ *
+ * \section Linux Linux
+ * + OpenSUSE 13.1 (64-bit)
+ * + OpenSUSE 13.2 (64-bit, 32-bit)
+ * + Cent OS 7 (64-bit)
+ * + Ubuntu 14.04 LTS (32-bit, 64-bit)
+ *   + yum install gcc-c++ gcc-fortran doxygen-latex cmake zlib-devel flex bison
+ * + Fedora 21 (64bit)
+ *
+ * \section Mac Mac OS
+ * Compilation of the dependencies and our source code is possible, however a bug concerning the gird partitioning causes a crash. Invoking with mpirun -np 1 is therefore recomended.
+ *
+ * \section Win Windows
+ * Not supported.
+ *
+ * \section and Android
+ * Not supported. 
+ */

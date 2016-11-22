@@ -1,0 +1,171 @@
+/** @page my_newton_alg.dox Our Newton method
+ * The main algorithm loop can be found in \link #BreedSolver::MySolver::DoIter \endlink.
+ * In the following section, a short explanation of the algorithms's set of operations is given. In principle, it is a constrained Newton algorithm where we look for solutions 
+ * which lie on special manifold defined by the equations in Step 4. 
+ *
+ * The main loop is invoked at three different places, namely \link #BreedSolver::MySolver::run \endlink, \link #BreedSolver::MySolver::run2 \endlink, and
+ * \link #BreedSolver::MySolver::run2b \endlink. The first variant computes only one solution where the initial guess is set by the quantum numbers. 
+ * The second variant also computes only one solution with the difference that the initial guess is set via the "guess_fct" string in the parameter file. Only the standard math
+ * functions are available. The last variant computes a collection of solutions by increasing \f$ \mu \f$ after each found solution. Here, the initial guess
+ * is set via the quantum numbers. \link #BreedSolver::MySolver::run2b \endlink is the default choice, which can be changed by editing the main section
+ * of breed or breed_cs or breed_1.
+ *
+ * Each of this runs make calls to functions which creates the grid. For the 2d, respectively 3d, case we use \link #BreedSolver::MySolver::make_grid_custom \endlink, respectively \link #BreedSolver_cs::MySolver::make_grid_custom \endlink.
+ * The grid refinement of the initial grid is performed based on the hard coded iso values of the potential.In order to modify the grid you need to edit the source code. The motivation for a custom grid is the reduction of the 
+ * number of cells in order to decrease the computational time. In 1d we use \link #BreedSolver_1::MySolver::make_grid \endlink. 
+ * The make_grid functions in generally create regular grids which are globally refined according to the m_global_refinement parameter. 
+ * If you like to use a globally refined grid in 2d, respectively 3d, then you need to replace make_grid_custom by make_grid.
+ * 
+ * <H3>The main loop</H3>
+ * 
+ * <DIV class="one"><TABLE>
+ * <TR><TH>Preparation</TH></TR>
+ * <TR><TD>
+ *  Set the loop counter \f$ k \leftarrow 0 \f$. <BR>
+ *  Set \f$ \mu \f$ and \f$ \gamma \f$. <BR>
+ *  Set the initial guess for \f$ \phi_0 \f$ and \f$ \phi_1 \leftarrow 0 \f$.<BR>
+ *  Set the initial value for \f$ t_0^0 \f$ and \f$ t_1^0 \f$.
+ * </TD></TR>
+ * <TR><TD>
+ * \f$ \phi_{ref}^k \leftarrow t_0^k \phi_0 + t_1^k \phi_1^k \f$</TD></TR>
+ * <TR><TD>Assemble the right hand side
+ * \f[
+ * F_i^k = \sum_K \sum_q w_q^K \left( \nabla \phi_{ref}^k(x_q^K) \nabla h_i(x_q^K) + (V-\mu) \phi_{ref}^k(x_q^K) h_i(x_q^K) + \gamma \left( \phi_{ref}^k(x_q^K) \right)^3 h_i(x_q^K) \right)
+ * \f]
+ * 
+ * </TD></TR>
+ * <TR><TH>Step 1</TH></TR>
+ * <TR><TD>Assemble the system 
+ * \f[
+ * J_{ij}^k = \sum_K \sum_q w_q^K \left( \nabla h_i(x_q^K) \nabla h_j(x_q^K) + (V-\mu) h_i(x_q^K) h_j(x_q^K) + 3\gamma \left(\phi_{ref}^k(x_q^K) \right)^2 h_i(x_q^K) h_j(x_q^K) \right)
+ * \f] 
+ * </TD></TR>
+ * <TR><TH>Step 2</TH></TR>
+ * <TR><TD> Solve
+ * \f[
+ * J^k_{ij} d^k_j = F_i^k
+ * \f]
+ * </TD></TR>
+ * <TR><TH>Step 3</TH></TR>
+ * <TR><TD>
+ * \f[
+ * \phi_1^{k+1} = \phi_1^k - \text{sgn}(t_1^k) d^k
+ * \f]
+ * </TD></TR>
+ * <TR><TH>Step 4</TH></TR>
+ * <TR><TD> Find the new \f$ t_0^{k+1} \f$ and \f$ t_1^{k+1} \f$ for which the following set of equations 
+ * \f{align*}
+ * \sum_K \sum_q w_q^K \left[ \nabla\phi_{ref}^{k+1}(x_q^K) \nabla\phi_0(x_q^K) + (V-\mu) \phi_{ref}^{k+1}(x_q^K)\phi_0(x_q^K) + \gamma \left(\phi_{ref}^{k+1}(x_q^K)\right)^3 \phi_0(x_q^K) \right] &= 0 \\
+ * \sum_K \sum_q w_q^K \left[ \nabla\phi_{ref}^{k+1}(x_q^K) \nabla\phi_1^{k+1}(x_q^K) + (V-\mu) \phi_{ref}^{k+1}(x_q^K)\phi_1^{k+1}(x_q^K) + \gamma \left(\phi_{ref}^{k+1}(x_q^K)\right)^3 \phi_1^{k+1}(x_q^K) \right] &= 0
+ * \f} holds. 
+ * </TD></TR>
+ * <TR><TH>Step 5</TH></TR>
+ * <TR><TD>\f$ k \leftarrow k+1 \f$</TD></TR>
+ * <TR><TD>\f$ \phi_{ref}^k \leftarrow t_0^k \phi_0 + t_1^k \phi_1^k \f$</TD></TR></TD></TR>
+ * <TR><TD>Assemble the right hand side \f$ F_i^k \f$ and compute the residual of \f$ F_i^k \f$. <BR>
+ * Residuals smaller than a given threshold cause exiting the loop and move on to post processing or <BR>
+ * else move to Step 1.
+ * </TD></TR>
+ * </TABLE></DIV>
+ * <DIV class="mynote">
+ * <B>Remark on the initial value of \f$ t_0^0 \f$ and \f$ t_1^0 \f$ </B><BR> 
+ * The choice how the initial values are set can be changed via the CMake option BUILD_NEHARI. If BUILD_NEHARI is set to OFF then both variables are set to a fixed 
+ * value which is determined through ti in the parameter file. If BUILD_NEHARI is set to ON then the value which belongs to the Nehari manifold is computed, which is given by 
+ * \f[
+ * t_0^0 = t_1^0 = \sqrt{\frac{T-\mu N}{\gamma W}}, 
+ * \f]
+ * where 
+ * \f$
+ * T := \int_{\Omega} dV \left[ \left(\nabla\phi_0\right)^2 + V \psi_0^2 \right]
+ * \f$,
+ * \f$
+ * N = \int_{\Omega} dV \left[ \phi_0^2 \right]
+ * \f$, and
+ * \f$
+ * W = \int_{\Omega} dV \left[ \phi_0^4 \right]
+ * \f$. This is a special case of the equations in Step 4. If we set \f$ \phi_{ref}^0 \leftarrow t_0^0 \phi_0 + t_1^0 0 \f$ the we can solve for \f$ t_0^0 \f$ and we obtain formula above.  
+ * The reader may note that for the case \f$ \gamma>0 \f$, \f$ T-\mu N > 0 \f$ has to be true, otherwise the roots are not real. For the case \f$ \gamma<0 \f$ the opposite has to be true. 
+ * </DIV>
+ * <DIV class="mynote">
+ * <B>Remark on the initial guess</B><BR>
+ * For convenience, the eigenfunctions of the corresponding linear problem were used for the first initial guess, however it is not required that the initial guess is a solution of that linear problem.
+ * All initial guesses have to respect the boundary conditions from the beginning, otherwise the algorithm will behave badly.
+ *
+ * The used eigenfunctions read:
+ * <DIV class="one"><TABLE>
+ * <TR><TH>BUILD_3D</TH><TH>BUILD_HTRAP</TH><TH></TH></TR>
+ * <TR><TH>ON</TH><TH>OFF</TH>
+ * <TD>
+ * \f[
+ * \phi_{n,m,k}(x,y,z) := \bar{\text{Ai}}( \beta^{1/3} x + \xi_n ) \frac{\omega_y^{1/4}}{\sqrt{2^m m! \sqrt{\pi}}} \frac{\omega_z^{1/4}}{\sqrt{2^k k! \sqrt{\pi}}} \exp \left( -\omega_y y^2 / 2 \right) \exp \left( -\omega_z z^2 / 2 \right) H_m\left(\sqrt{\omega_y} y \right) H_k\left(\sqrt{\omega_z} z \right)
+ * \f]
+ * </TD>
+ * </TR>
+ * <TR><TH>ON</TH><TH>ON</TH>
+ * <TD>
+ * \f[
+ * \phi_{n,m,k}(x,y,z) := \frac{\omega_x^{1/4}}{\sqrt{2^n n! \sqrt{\pi}}} \frac{\omega_y^{1/4}}{\sqrt{2^m m! \sqrt{\pi}}} \frac{\omega_z^{1/4}}{\sqrt{2^k k! \sqrt{\pi}}} \exp \left( -\omega_x x^2 / 2 \right) \exp \left( -\omega_y y^2 / 2 \right) \exp \left( -\omega_z z^2 / 2 \right) H_n\left(\sqrt{\omega_x} x \right) H_m\left(\sqrt{\omega_y} y \right) H_k\left(\sqrt{\omega_z} z \right)
+ * \f]
+ * </TD>
+ * </TR>
+ * </TABLE></DIV> 
+ * For the two dimensional case you have only to omit all terms belonging to the last coordinate, respectively the last quantum number \f$ k \f$
+ * and in the one dimensional situation you have to omit the last two coordinates.
+ * <BR>
+ * \f$ H_n, ... \f$ are the Hermite polynomials.
+ * <BR>
+ * \f$ \bar{\text{Ai}}( \beta^{1/3} x + \xi_n ) \f$ is the normalised AiryAi function shifted by the n-th zero \f$ \text{Ai}(x) \f$.
+ * We align the gravity term \f$ \beta x \f$ in deal.II along the first coordinate, because it is easier handle the two and three dimensional case with C++ templates.
+ * </DIV>
+ * <BR>
+ * <DIV class="mynote">
+ * <B>Remark on the potential</B><BR>
+ * The definition of the potentials can be found in \link functions.h \endlink and in \link functions_cs.h \endlink and in \link functions_1.h \endlink.
+ * </DIV>
+ * <BR>
+ * <DIV class="mynote">
+ * <B>Note on the right hand side</B><BR>
+ * In order to obtain the right hand side we multiply the discrete time independent Gross--Pitaevski equation by test functions \f$ h_i(x_q^K) \f$ and integrate over the domain. 
+ * The \f$ i \f$ index  is the global index of the vector, to which the FEM basis functions are associated.
+ * The integral over the volume translates into double sum over all cells \f$ K \f$ and all quadrature points \f$ x_q^K \f$ in each cell time a weight \f$ w_q^K \f$, given by the product between
+ * the Jacobian of the cell and the weight of the quadrature formula.
+ * This is done in \link #BreedSolver::MySolver::assemble_rhs \endlink. In addition the residual of the 
+ * right hand side is computed, representing the termination criterion. 
+ * </DIV>
+ * <BR>
+ * <DIV class="mynote">
+ * <B>Note on Step 1</B><BR>
+ * In this step we assemble the system matrix which is simply the Jacobian of the right hand side. The assembling process is implemented in \link #BreedSolver::MySolver::assemble_system \endlink .
+ * </DIV>
+ * <BR>
+ * <DIV class="mynote">
+ * <B>Note on Step 2</B><BR>
+ * The linear system of equations is solved with the MUMPS (\link http://mumps.enseeiht.fr/ \endlink) direct solver provided throught the PESTSc (\link http://www.mcs.anl.gov/petsc/) \endlink library.
+ * We recommend not to use iterative solver since it may fail for larger \f$ \mu \f$ values. If you accidentally hit a \f$ \mu \f$ value which is a  
+ * bifurcation point, then the algorithm may slow down extremely or fail. At a bifurcation point the zero eigenvalue lies in the spectrum of the Jacobian.
+ * </DIV>
+ * <BR>
+ * <DIV class="mynote">
+ * <B>Note on Step 3</B><BR> 
+ * \f$ \text{sgn}(t^{k}_1) \f$ reflects the \f$ Z_2 \f$ symmetry. \f$ -t^{k}_0 \f$ and \f$ -t^{k}_1 \f$ are solutions of the system in Step 4 as well.
+ * </DIV>
+ * <BR>
+ * <DIV class="mynote">
+ * <B>Note on Step 4</B><BR>
+ * The mathematical meaning is that we have a special point in the function space where the \f$ L_2 \f$-gradient given by time independent Gross--Pitaevski equation vanishes in the direction of \f$ \phi_0 \f$
+ * and \f$ \phi^k_1 \f$. The main idea is to follow all these points until we hit a critical point at which all derivatives vanish. <BR>
+ * This computation is conducted in two steps. First the various integral contributions are computed in \link #BreedSolver::MySolver::compute_contributions \endlink,  
+ * and second we search for the new \f$ t_0^{k+1} \f$ and \f$ t_1^{k+1} \f$ in \link #CBase::find_ortho_min \endlink. 
+ * There are two versions available which can be selected by the BUILD_VARIANT2 option accessible through ccmake. Both versions use
+ * a simplex search. For the first version we sum up the squared of both equations and look for critical points which are local minima and 
+ * zero at the same time. For the second version we search minima of the corresponding functional of the Gross-Pitaevski equation.
+ * </DIV>
+ * <BR>
+ * <DIV class="mynote">
+ * <B>Remark on boundary conditions</B><BR>
+ * The boundary conditions are applied during the assembly processes of the right hand side and the system matrix.<BR> 
+ * In Cartesian coordinates we enforce zero Dirichlet boundary conditions on the whole domain boundary. In the cylindrical symmetry version we can have 
+ * zero Dirichlet or zero Neumann boundary conditions at \f$ r=0 \f$. The selection depends on the angular momentum quantum number. 
+ * </DIV>
+ * 
+ */

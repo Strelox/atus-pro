@@ -1,0 +1,21 @@
+/** \page building_atus_pro.dox  Building Atus Pro
+ *
+ * \subsection build_src Building the programs
+ * Change into our folder
+ * + mkdir build
+ * + cd build
+ * + cmake ..
+ * + make -j
+ *
+ * You can inspect or change your settings with ccmake . within the build folder. The following options are available
+ * <TABLE>
+ * <TR><TH>BUILD_3D</TH><TD>If this option is set to ON, then breed, rtprop, and gen_params are build for the 3D case.</TD></TR>
+ * <TR><TH>BUILD_DOCUMENTATION</TH><TD>If this option is set to ON, you can create the HTML documentation via make doc if doxygen is available.</TD></TR>
+ * <TR><TH>BUILD_HTRAP</TH><TD>Choose the harmonic trap potential as default, if it is on.</TD></TR>
+ * <TR><TH>BUILD_NEHARI</TH><TD>Choose the initial point in function space according to the Nehari manifold. This option affects only rtprop and rtpro_cs.</TD></TR>
+ * <TR><TH>BUILD_VARIANT2</TH><TD></TD></TR>
+ * </TABLE>
+ * Your configuration should look like this. 
+ * \image html img/ccmake.png 
+ * CMake searches the LD_LIBRARY_PATH environment variable for required the libraries. If something is missing then you should check your paths and the content of LD_LIBRARY_PATH.
+ */

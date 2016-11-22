@@ -1,0 +1,107 @@
+/** \mainpage Atus Pro
+ *
+ * \section Introduction Introduction
+ * 
+ * The time dependent Gross-Pitaevskii equation 
+ * 
+ * \f[
+ * i \partial_t \Psi(\vec{x},t) = \left( -\Delta  + V(\vec{x}) + \gamma \vert\Psi(\vec{x},t)\vert^2 \right) \Psi(\vec{x},t)
+ * \f]
+ * 
+ * is a non linear partial differential equation which describes the time evolution of a Bose-Einstein-Condensate at zero temperature.<br>
+ * Here \f$ i \f$ denotes the imaginary unit and \f$ \Psi(\vec{x},t) \f$ is the complex wave function.  The external potential,\f$ V(\vec{x}) \in R \f$ can be in 
+ * principle time dependent.  \f$ \gamma \in R \f$ is the non linearity parameter of the self interaction term \f$ \gamma \vert\Psi(\vec{x},t)\vert^2 \f$. If \f$ \gamma > 0 \f$ 
+ * then the interaction is repulsive, otherwise attractive. \f$ \vec{x} \f$ represents the spatial coordinate.
+ *
+ * Our software package provides the code to solve the discretized
+ * version of this equation 
+ * by means of of a fully implicit Crank-Nicolson method using the FEM method provided
+ * in the deal.ii library. For this purpose, the Gross-Pitaevskii equation is split into
+real and imaginary part, since deal.ii can not handle complex problems inherently. The explanation of the algorithm can be found \link crank_nicholson.dox here\endlink .
+ * 
+ * By introducing the following ansatz
+ *   
+ * \f[
+ * \Psi(\vec{x},t) = \phi(\vec{x}) \exp\left( i \mu t \right),
+ * \f]
+ * where \f$ \phi(\vec{x}) \in R \f$, we deduce the time independent Gross-Pitaevskii equation 
+ * 
+ * \f[
+ * \mu \phi(\vec{x}) = \left( -\Delta  + V(\vec{x}) + \gamma \phi^2(\vec{x}) \right) \phi(\vec{x}).
+ * \f]
+ * 
+ * \f$ \mu \f$ is the chemical potential. The time independent case is solved with our modified Newton method \cite marojevic_energy_2013 . An explanation
+ * is given \link my_newton_alg.dox here \endlink .
+ * 
+ * In our package we have prescribed two external trapping potentials which can be selected by the cmake option BUILD_HTRAP. 
+ * If this option is disabled then the following trapping potential, referred to as GOST, is considered
+ * <DIV class="one"><TABLE>
+ * <TR><TD>BUILD_HTRAP</TD><TH>ON</TH><TH>OFF</TH></TR>
+ * <TR><TD></TD><TD>\f$ V = \omega_x^2 x^2 + \omega_x^2 y^2 + \omega_z^2 z^2 \f$</TD><TD>\f$  V = \beta x + \omega_x^2 y^2 + \omega_z^2 z^2 \f$</TD></TR>
+ * </TABLE></DIV>
+ * The default of the domain \f$ \Omega \f$ is given by \f$ [0,30] \times [-15,15] \times [-15,15] \f$ and zero Dirichlet boundary conditions are enforced. 
+ * For the 2D case which also can be controlled through the cmake option BUILD_3D the last coordinate is simply omitted. 
+ * 
+ * The trapping potential can be changed manually in the code, by editing the following functions \link #BreedSolver::CPotential::value \endlink or \link #BreedSolver_cs::CPotential::value \endlink or \link #BreedSolver_1::CPotential::value \endlink.
+ * 
+ * <HR>
+ * \section Overview Overview 
+ * \subsection Overview_TIGPE Solver for the time independent Gross-Pitaevskii equation
+ * <DIV class="one"><TABLE>
+ * <TR><TH>breed</TH><TD>Our Newton Method (Cartesian coordinates)</TD><TD> \link my_newton_alg.dox more details \endlink </TD></TR>
+ * <TR><TH>breed_cs</TH><TD>Our Newton Method (Cylinder symmetry)</TD><TD> \link my_newton_alg_cs.dox more details \endlink </TD></TR>
+ * <TR><TH>breed_1</TH><TD>Our Newton Method for 1d (Cartesian coordinates)</TD><TD></TD></TR>
+ * </TABLE></DIV>
+ * 
+ * \subsection Overview_GPE Solver for the time dependent Gross-Pitaevskii equation
+ * <DIV class="one"><TABLE>
+ * <TR><TH>rtprop</TH><TD>Real time propagation (Cartesian coordinates)</TD><TD> \link crank_nicholson.dox more details \endlink </TD></TR>
+ * <TR><TH>rtprop_cs</TH><TD>Real time propagation (Cylinder symmetry)</TD><TD></TD></TR>
+ * <TR><TH>rtprop_1</TH><TD>Real time propagation for 1d (Cartesian coordinates)</TD><TD></TD></TR>
+ * </TABLE></DIV>
+ *
+ * \subsection Overview_PARAMS Paramter generation
+ * <DIV class="one"><TABLE>
+ * <TR><TH>gen_params</TH><TD>Creates a folder with sub folders containing parameter files for breed.</TD></TR>
+ * <TR><TH>gen_params_cs</TH><TD>Creates a folder with sub folders containing parameter files for breed_cs.</TD></TR>
+ * </TABLE></DIV>
+ * 
+ * <HR>
+ * \section Installation Installation
+ * \subsection Requirements Software Requirements 
+ * - CMake (min 2.8)
+ * - Doxygen (optional)
+ * - Python (2.7), Bison, Flex
+ * - C, C++11 compliant compiler, Fortran
+ * - MPI Implementation
+ * - GSL - GNU Scientific Library (1.16)
+ * - LAPACK (3.5.0)
+ * - P4EST (1.1)
+ * - PETSC (3.5.3)
+ * - deal.ii (8.2.1)
+ * \subsection Installation 
+ * + \link tested_platforms.dox Tested platforms \endlink
+ * + \link install_linux.dox Installation of dependencies for Linux \endlink
+ * + \link building_atus_pro.dox Building Atus Pro \endlink
+ * 
+ * <HR>
+ * \section run Running the programs
+ * 
+ * The programs gan be invoked for example through: mpirun -np 4 breed <BR>
+ * where the -np option specifies the number of used cores.
+ *
+ * \attention Do not start the real time propagation with an higher np value then it was initially chosen for breed, respectively breed_cs.
+ * 
+ * \link params.dox The parameter file \endlink
+ *
+ * \section vis Visualisation
+ * 
+ * Our programs can store the data in two different file formats. The first one is the native binary format of the deal.ii library. 
+ * This format allows to read in the grid data and and the wave function by different deal.ii programs. In our case
+ * the real time propagation programs can read in files from breed or breed_cs. In case of two or three dimensions the second format is 
+ * the vtu format witch can be opened with <a href="http://www.paraview.org/">Paraview</a> or <a href="https://wci.llnl.gov/simulation/computer-codes/visit/">VisIt</a>.
+ * In the 1d single core variants breed_1 and rtprop_1 the situation is slightly different. First the triangulation is not stored natively, only the vector containing
+ * the degrees of freedom is stored. Therefore rtprop_1 should always use the same grid parameters as breed_1. The second difference is that instead of writing a vtu file,
+ * we store <a href="http://www.gnuplot.info/">gnuplot</a> files.
+ * <br>\image html img/paraview.png 
+ */

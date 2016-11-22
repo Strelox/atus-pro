@@ -1,0 +1,51 @@
+/** \page params.dox Parameters
+ * 
+ * The default file name for the parameter file is params.prm and can be modified with any text editor. 
+ * You can use the programs gen_params or gen_params_cs to generate a number of parameter files for breed or breed_cs, respectively.
+ * The main folder contains a time stamp and the sub folders are labelled according to the quantum numbers of the initial guess.
+ * The second possibility is to invoke for example mpirun -np 2 breed within an empty folder. In this case the program creates a 
+ * new parameter file and continues with the default parameter values.
+ *
+ * \section mgp Mesh & geometry parameters
+ * <DIV class="one"><TABLE>
+ * <TR><TH></TH><TH></TH><TH></TH>default value</TR>
+ * <TR><TD>global_refinements</TD><TD>Controls the initial global grid refinement in \ref BreedSolver::MySolver::make_grid </TD><TD>8</TD></TR>
+ * <TR><TD>xMin</TD><TD>The choice of the default value depends on the CMake option BUILD_HTRAP</TD><TD>-15 or 0</TD></TR>
+ * <TR><TD>xMax</TD><TD>Same as above</TD><TD>15 or 30</TD></TR>
+ * <TR><TD>yMin</TD><TD></TD><TD>-15</TD></TR>
+ * <TR><TD>yMax</TD><TD></TD><TD>15</TD></TR>
+ * <TR><TD>zMin</TD><TD></TD><TD>-15</TD></TR>
+ * <TR><TD>zMax</TD><TD></TD><TD>15</TD></TR>
+ * </TABLE></DIV>
+ * 
+ * \section pc Physical constants
+ * <DIV class="one"><TABLE>
+ * <TR><TH></TH><TH></TH><TH>default value</TH><TH>breed, breed_cs</TH><TH>rtprop, rtprop_cs</TH></TR>
+ * <TR><TD>QN1_x</TD><TD>quantum number of the eigenfunction which is used for the initial guess for the x coordinate</TD><TD align="center">1</TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * <TR><TD>QN1_y</TD><TD>same as above, but for the y coordinate</TD><TD align="center">1</TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * <TR><TD>QN1_z</TD><TD>same as above, but for the z coordinate</TD><TD align="center">1</TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * <TR><TD>omega_x</TD><TD>Trapping frequency \f$ \omega_x \f$ for the harmonic trap</TD><TD align="center">0.5</TD><TD align="center">X</TD><TD align="center">X</TD></TR>
+ * <TR><TD>omega_y</TD><TD>Trapping frequency \f$ \omega_y \f$ for the harmonic trap</TD><TD align="center">0.5</TD><TD align="center">X</TD><TD align="center">X</TD></TR>
+ * <TR><TD>omega_z</TD><TD>Trapping frequency \f$ \omega_z \f$ for the harmonic trap</TD><TD align="center">0.5</TD><TD align="center">X</TD><TD align="center">X</TD></TR>
+ * <TR><TD>gf</TD><TD>Dimensionless gravitational acceleration \f$ \beta \f$</TD><TD align="center">1</TD><TD align="center">X</TD><TD align="center">X</TD></TR>
+ * <TR><TD>gs</TD><TD>Self interaction parameter \f$ \gamma \f$</TD><TD align="center">1</TD><TD align="center">X</TD><TD align="center">X</TD></TR>
+ * <TR><TD>t</TD><TD>current time</TD><TD align="center">0</TD><TD align="center"></TD><TD align="center">X</TD></TR>
+ * </TABLE></DIV>
+ *
+ * The allowed range of quantum numbers is from \f$ 0 \f$ to \f$ 9 \f$.
+ *
+ * \section acp Algorithm control parameters
+ * <DIV class="one"><TABLE>
+ * <TR><TH></TH><TH></TH><TH align="center">default value</TH><TH>breed, breed_cs</TH><TH>rtprop, rtprop_cs</TH></TR>
+ * <TR><TD>epsilon</TD><TD></TD><TD align="center">10<SUP>-5</SUP></TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * <TR><TD>ti</TD><TD></TD><TD align="center"></TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * <TR><TD>NK</TD><TD>number of intermediate steps</TD><TD align="center"></TD><TD align="center"></TD><TD align="center">X</TD></TR>
+ * <TR><TD>NA</TD><TD>frequency of data output</TD><TD align="center"></TD><TD align="center"></TD><TD align="center">X</TD></TR>
+ * <TR><TD>dmu</TD><TD>\f$ \Delta\mu \f$</TD><TD align="center">0.1</TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * <TR><TD>Ndmu</TD><TD></TD><TD align="center">10</TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * <TR><TD>dt</TD><TD>\f$ \Delta t \f$</TD><TD align="center">0.01</TD><TD align="center"></TD><TD align="center">X</TD></TR>
+ * <TR><TD>filename</TD><TD></TD><TD align="center">final.bin</TD><TD align="center"></TD><TD align="center">X</TD></TR>
+ * <TR><TD>guess_fct</TD><TD>\ref BreedSolver::MySolver::run2 and \ref BreedSolver_cs::MySolver::run2 creates the initial guess via this string</TD><TD align="center">exp(-0.5*x^2)*exp(-0.5*y^2)</TD><TD align="center">X</TD><TD align="center"></TD></TR>
+ * </TABLE></DIV>
+ * 
+ */

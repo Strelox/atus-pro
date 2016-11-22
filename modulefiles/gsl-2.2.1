@@ -1,0 +1,31 @@
+#%Module1.0#####################################################################
+################################################################################
+
+set path       /opt/gsl-2.2.1
+set tool       gsl 
+set version    2.2.1
+
+proc ModulesHelp { } {
+  puts stderr "\t $tool $version"
+}
+
+module-whatis  "sets the environment for $tool $version."
+
+################################################################################
+#
+
+set mode [ module-info mode ]
+
+if { $mode eq "load" || $mode eq "switch2" } {
+  puts stderr "Module for $tool $version loaded."
+} elseif { $mode eq "remove" || $mode eq "switch3" } {
+  puts stderr "Module for $tool $version unloaded."
+}
+
+################################################################################
+#
+
+prepend-path PATH            $path/bin
+prepend-path MANPATH         $path/share/man
+prepend-path LD_LIBRARY_PATH $path/lib64
+prepend-path LD_RUN_PATH     $path/lib64
