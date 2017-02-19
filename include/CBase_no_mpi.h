@@ -83,7 +83,7 @@ protected:
   unsigned m_NA;
   unsigned m_Ndmu;
 
-  unsigned m_QN1;
+  unsigned m_QN1[3];
 
   ofstream m_computing_timer_log;
   TimerOutput m_computing_timer;
@@ -109,7 +109,7 @@ CBase<dim>::CBase( const std::string &xml_filename )
 
     m_omega = m_ph.Get_Physics("omega");
     m_gs = m_ph.Get_Physics("gs_1", 0);
-    m_QN1 = int(m_ph.Get_Physics("QN1", 0));
+    m_QN1[0] = int(m_ph.Get_Physics("QN1", 0));
 
     m_xmin = m_ph.Get_Mesh("xrange", 0);
     m_xmax = m_ph.Get_Mesh("xrange", 1);

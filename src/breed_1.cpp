@@ -73,8 +73,7 @@
 
 #include "config.h"
 #include "my_table.h"
-#include "ef.h"
-#include "functions_1.h"
+#include "functions.h"
 #include "ref_pt_list.h"
 #include "MyParameterHandler.h"
 
@@ -218,7 +217,7 @@ namespace BreedSolver_1
   {
     m_computing_timer.enter_section(__func__);
 
-    CPotential Potential(m_omega);
+    CPotential<dim> Potential(m_omega);
     const QGauss<dim>  quadrature_formula(fe.degree + 1);
     FEValues<dim> fe_values (fe, quadrature_formula, update_gradients | update_values | update_JxW_values | update_quadrature_points);
 
@@ -256,7 +255,7 @@ namespace BreedSolver_1
   {
     m_computing_timer.enter_section(__func__);
 
-    CPotential Potential(m_omega);
+    CPotential<dim> Potential(m_omega);
     const QGauss<dim>  quadrature_formula(fe.degree + 1);
     FEValues<dim> fe_values (fe, quadrature_formula, update_gradients | update_values | update_JxW_values | update_quadrature_points);
 
@@ -352,7 +351,7 @@ namespace BreedSolver_1
     for (unsigned int i = 0; i < dof_handler.n_dofs(); ++i)
       if (boundary_dofs[i] == true) m_Psi_ref(i) = 0.0;
 
-    CPotential Potential(m_omega);
+    CPotential<dim> Potential(m_omega);
     const QGauss<dim> quadrature_formula(fe.degree + 1);
 
     m_system_matrix = 0;
@@ -417,7 +416,7 @@ namespace BreedSolver_1
     for ( unsigned i = 0; i < dof_handler.n_dofs(); i++ )
       if ( boundary_dofs[i] == true ) m_Psi_ref(i) = 0;
 
-    CPotential Potential(m_omega);
+    CPotential<dim> Potential(m_omega);
     const QGauss<dim> quadrature_formula(fe.degree + 1);
 
     m_system_rhs = 0;
@@ -596,7 +595,7 @@ namespace BreedSolver_1
   template <int dim>
   void MySolver<dim>::estimate_error ( double &err )
   {
-    CPotential Potential( m_omega );
+    CPotential<dim> Potential( m_omega );
     const QGauss<1> quadrature_formula(fe.degree + 1);
 
     m_system_rhs = 0;
@@ -746,7 +745,7 @@ namespace BreedSolver_1
     make_grid();
     setup_system();
 
-    CEigenfunctions Ef1( m_QN1, m_omega );
+    CEigenfunctions<dim> Ef1( m_QN1, m_omega );
     VectorTools::interpolate (dof_handler, Ef1, m_Psi_0 );
     m_Psi_0 *= 1.0 / sqrt(Particle_Number(m_Psi_0)); // This operation destroys the content of the ghost cells. This is fixed in compute_E_lin.
     m_Psi_1 = 0;
@@ -859,7 +858,7 @@ namespace BreedSolver_1
     make_grid();
     setup_system();
 
-    CEigenfunctions Ef1( m_QN1, m_omega );
+    CEigenfunctions<dim> Ef1( m_QN1, m_omega );
     VectorTools::interpolate (dof_handler, Ef1, m_Psi_0 );
     m_Psi_0 *= 1.0 / sqrt(Particle_Number(m_Psi_0));
     m_Psi_1 = 0;
@@ -926,7 +925,7 @@ namespace BreedSolver_1
     m_computing_timer.enter_section(__func__);
     string filename = "guess.gnuplot";
 
-    CPotential Pot( m_omega );
+    CPotential<dim> Pot( m_omega );
     VectorTools::interpolate (dof_handler, Pot, m_workspace );
 
     DataOut<dim> data_out;

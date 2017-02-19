@@ -462,7 +462,7 @@ namespace realtime_propagation
     m_computing_timer.enter_section(__func__);
     const QGauss<dim> quadrature_formula(fe.degree + 1);
 
-    BreedSolver::CPotential<dim> Potential ( m_omega );
+    CPotential<dim> Potential ( m_omega );
 
     const FEValuesExtractors::Scalar rt (0);
     const FEValuesExtractors::Scalar it (1);
@@ -539,7 +539,7 @@ namespace realtime_propagation
     m_computing_timer.enter_section(__func__);
     const QGauss<dim> quadrature_formula(fe.degree + 1);
 
-    BreedSolver::CPotential<dim> Potential ( m_omega );
+    CPotential<dim> Potential ( m_omega );
 
     const FEValuesExtractors::Scalar rt (0);
     const FEValuesExtractors::Scalar it (1);
