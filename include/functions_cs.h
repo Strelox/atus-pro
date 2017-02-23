@@ -36,8 +36,7 @@ class CEigenfunctions : public Function<dim>
 template <int dim>
 double CEigenfunctions<dim>::value( const Point<dim> &p, const unsigned int component ) const
 {
-  double retval = (*AIRYEF[m_QNx])(p(0),pow(m_fakx,1.0/3.0)) * (*EF_PHO[m_QNy+51*m_QNz])(p(1),m_faky);
-  //double retval = (*AIRYEF[m_QNx])(pow(m_fakx,1.0/3.0)*p(0)) * (*HERMITEH[m_QNy])(sqrt(m_faky)*p(1))*exp(-0.5*m_faky*p(1)*p(1));
+  double retval = (*AIRYEF[m_QNx])(pow(m_fakx,1.0/3.0),p(0)) * (*EF_PHO[m_QNy+51*m_QNz])(m_faky,p(1));
 return retval;
 }
 

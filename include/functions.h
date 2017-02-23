@@ -3,7 +3,6 @@
 #define _MY_FUNCTIONS
 
 #include <deal.II/base/function.h>
-#include <gsl/gsl_sf.h>
 #include "eigenfunctions_AiryAi.h"
 #include "eigenfunctions_HO.h"
 #include "eigenfunctions_Polar_HO.h"
@@ -44,7 +43,7 @@ double CEigenfunctions<dim>::value( const Point<dim> &p, const unsigned componen
   {
     case 1:
             #if POTENTIAL==1
-              retval = (*EF_HO[m_QNx])(sqrt(m_fakx),p(0));
+              retval = (*EF_HO[m_QNx])(m_fakx,p(0));
             #endif
             #if POTENTIAL==2
               retval = (*AIRYEF[m_QNx])(pow(m_fakx,1.0/3.0),p(0));
@@ -52,18 +51,18 @@ double CEigenfunctions<dim>::value( const Point<dim> &p, const unsigned componen
     break;
     case 2:
             #if POTENTIAL==1
-              retval = (*EF_HO[m_QNx])(sqrt(m_fakx),p(0)) * (*EF_HO[m_QNy])(sqrt(m_faky),p(1));
+              retval = (*EF_HO[m_QNx])(m_fakx,p(0)) * (*EF_HO[m_QNy])(m_faky,p(1));
             #endif
             #if POTENTIAL==2
-              retval = (*AIRYEF[m_QNx])(pow(m_fakx,1.0/3.0),p(0)) * (*EF_HO[m_QNy])(sqrt(m_faky),p(1));
+              retval = (*AIRYEF[m_QNx])(pow(m_fakx,1.0/3.0),p(0)) * (*EF_HO[m_QNy])(m_faky,p(1));
             #endif
     break;
     case 3:
             #if POTENTIAL==1
-              retval = (*EF_HO[m_QNx])(sqrt(m_fakx),p(0)) * (*EF_HO[m_QNy])(sqrt(m_faky),p(1)) * (*EF_HO[m_QNz])(sqrt(m_fakz),p(2));
+              retval = (*EF_HO[m_QNx])(m_fakx,p(0)) * (*EF_HO[m_QNy])(m_faky,p(1)) * (*EF_HO[m_QNz])(m_fakz,p(2));
             #endif
             #if POTENTIAL==2
-              retval = (*AIRYEF[m_QNx])(pow(m_fakx,1.0/3.0),p(0)) * (*EF_HO[m_QNy])(sqrt(m_faky),p(1)) * (*EF_HO[m_QNz])(sqrt(m_fakz),p(2));
+              retval = (*AIRYEF[m_QNx])(pow(m_fakx,1.0/3.0),p(0)) * (*EF_HO[m_QNy])(m_faky,p(1)) * (*EF_HO[m_QNz])(m_fakz,p(2));
             #endif
     break;
   }
