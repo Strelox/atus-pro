@@ -591,7 +591,7 @@ namespace BreedSolver_cs
       {
         const Point<dim> face_center = cell->face(f)->center();
         if (cell->face(f)->at_boundary() && !(face_center[1] == 0) )
-          cell->face(f)->set_all_boundary_indicators(1);
+          cell->face(f)->set_all_boundary_ids(1);
       }
     }
 
