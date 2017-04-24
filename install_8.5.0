@@ -6,6 +6,10 @@
 (require "sb-posix")
 
 (defparameter *argv* (uiop:command-line-arguments))
+(defparameter *CC* (unless (string= (uiop:getenv "CC") "")
+                     (uiop:getenv "CC")))
+(defparameter *CXX* (unless (string= (uiop:getenv "CXX") "")
+                      (uiop:getenv "CXX")))
 
 (defvar *packages*
   '((:name openmpi :version "2.1.0"
@@ -133,6 +137,7 @@ Otherwise returns nil. Test is done via equal."
     (run (format nil
                  "./configure --prefix=~a~a --enable-mpi-fortran"
                  *install-dir* full-name))
+    (run "make clean")
     (run (format nil "make ~@[-j ~a~]" *make-threads*))
     (run "make install")
     (install-module name *install-dir* version *module-dir* '("CC" "mpicc"
@@ -151,8 +156,10 @@ Otherwise returns nil. Test is done via equal."
     (uiop:chdir (uiop:ensure-pathname (format nil "~abuild/" (uiop:getcwd))
                                       :ensure-directory t :ensure-directories-exist t))
     (run (format nil "cmake -DCMAKE_BUILD_TYPE=Release \\
+~@[-DCMAKE_C_COMPILER=~a~] ~@[-DCMAKE_CXX_COMPILER=~a~] \\
 -DCMAKE_FORTRAN_FLAGS_RELEASE=\"-march=native -fpic -O3\" \\
--DCMAKE_INSTALL_PREFIX=~a~a -DBUILD_SHARED_LIBS=ON .." *install-dir* full-name))
+-DCMAKE_INSTALL_PREFIX=~a~a -DBUILD_SHARED_LIBS=ON .." *CC* *CXX* *install-dir* full-name))
+    (run "make clean")
     (run (format nil "make ~@[-j ~a~]" *make-threads*))
     (run "make install")
     (install-module name *install-dir* version *module-dir*)
@@ -164,6 +171,7 @@ Otherwise returns nil. Test is done via equal."
   (let* ((name (string-downcase (symbol-name sw-name)))
          (full-name (format nil "~a-~a" name version)))
     (run (format nil "./configure --prefix=~a~a" *install-dir* full-name))
+    (run "make clean")
     (run (format nil "make ~@[-j ~a~] CFLAGS=\"-march=native -O3\"" *make-threads*))
     (run "make install")
     (install-module name *install-dir* version *module-dir*)
@@ -178,6 +186,7 @@ Otherwise returns nil. Test is done via equal."
   (let* ((name (string-downcase (symbol-name sw-name)))
          (full-name (format nil "~a-~a" name version)))
     (run (format nil "./configure --prefix=~a~a --enable-mpi --enable-shared --disable-vtk-binary --without-blas" *install-dir* full-name))
+    (run "make clean")
     (run (format nil "make ~@[-j ~a~] CFLAGS=\"-march=native -O3\"" *make-threads*))
     (run "make install")
     (install-module name *install-dir* version *module-dir*)
@@ -191,6 +200,7 @@ Otherwise returns nil. Test is done via equal."
   (let* ((name (string-downcase (symbol-name sw-name)))
          (full-name (format nil "~a-~a" name version)))
     (run (format nil "python2 ./configure --prefix=~a~a --with-shared-libraries --with-x=0 --with-debugging=0 --with-mpi=1 --download-hypre=yes --download-fblaslapack=1 --download-scalapack --download-mumps --download-ptscotch" *install-dir* full-name))
+    (run "make clean")
     (run (format nil "make all")) ;; No make -j support
     (run (format nil "make install"))
     (install-module name *install-dir* version *module-dir*)
@@ -205,12 +215,16 @@ Otherwise returns nil. Test is done via equal."
   (let* ((name (string-downcase (symbol-name sw-name)))
          (full-name (format nil "~a-~a" name version)))
     (uiop:chdir (uiop:ensure-pathname (format nil "~abuild/" (uiop:getcwd)) :ensure-directory t :ensure-directories-exist t))
-    (run (format nil "cmake -DDEAL_II_WITH_UMFPACK=ON -DDEAL_II_WITH_LAPACK=ON -DDEAL_II_WITH_PETSC=ON -DPETSC_DIR=~a~a -DDEAL_II_WITH_P4EST=ON -DP4EST_DIR=~a~a -DDEAL_II_WITH_THREADS=OFF -DDEAL_II_WITH_MPI=ON -DDEAL_II_WITH_HDF5=OFF -DCMAKE_INSTALL_PREFIX=~a~a .."
+    (run (format nil "cmake ~@[-DCMAKE_C_COMPILER=~a~] ~@[-DCMAKE_CXX_COMPILER=~a~] \\
+-DDEAL_II_WITH_UMFPACK=ON -DDEAL_II_WITH_LAPACK=ON -DDEAL_II_WITH_PETSC=ON -DPETSC_DIR=~a~a -DDEAL_II_WITH_P4EST=ON -DP4EST_DIR=~a~a -DDEAL_II_WITH_THREADS=OFF -DDEAL_II_WITH_MPI=ON -DDEAL_II_WITH_HDF5=OFF -DCMAKE_INSTALL_PREFIX=~a~a .."
+                 *CC*
+                 *CXX*
                  *install-dir*
                  (format nil "petsc-~a" (getf (package-match :name 'petsc) :version))
                  *install-dir*
                  (format nil "p4est-~a" (getf (package-match :name 'p4est) :version))
                  *install-dir* full-name))
+    (run "make clean")
     (run (format nil "make ~@[-j ~a~]" *make-threads*))
     (run "make install")
     (install-module name *install-dir* version *module-dir*)
@@ -227,7 +241,10 @@ Otherwise returns nil. Test is done via equal."
     (uiop:chdir (uiop:ensure-pathname (format nil "~abuild/" (uiop:getcwd))
                                       :ensure-directory t
                                       :ensure-directories-exist t))
-    (run "cmake ..")
+    (run (format nil "cmake ~@[-DCMAKE_C_COMPILER=~a~] ~@[-DCMAKE_CXX_COMPILER=~a~] .."
+                 *CC*
+                 *CXX*))
+    (run "make clean")
     (run (format nil "make ~@[-j ~a~]" *make-threads*))
     (let ((exit-code
            (nth-value 2 (uiop:run-program "which doxygen"
@@ -390,6 +407,7 @@ if { $mode eq \"load\" || $mode eq \"switch2\" } {
   (format t "    Software will be installed in: ~a~%" *install-dir*)
   (format t "    Modulefiles will be installed in: ~a~%" *module-dir*)
   (format t "    Make Threads: ~a~%" *make-threads*)
+  (format t "    CC=~a, CXX=~a~%" *CC* *CXX*)
   (when *debug-mode*
       (format t "    Debug Mode: ON~%" ))
 
@@ -450,6 +468,19 @@ q - Abort Installation.
       (format t "PATH=~a~%LD_LIBRARY_PATH=~a~%" (sb-posix:getenv "PATH") (sb-posix:getenv "LD_LIBRARY_PATH"))
       (uiop:run-program "echo $PATH" :output :interactive :ignore-error-status t)
       (uiop:run-program "echo $LD_LIBRARY_PATH" :output :interactive :ignore-error-status t))
+
+    (let ((module-path (format nil "export MODULEPATH=~a:$MODULEPATH" *module-dir*))
+          (shell-config-file (if (string= (pathname-name (uiop:getenv "SHELL")) "zsh")
+                                 ".zshrc"
+                                 ".bashrc")))
+      (when (yes-or-no-p "Should I append the following text to your ~a?~%~a~%"
+                         shell-config-file module-path)
+        (with-open-file (out (merge-pathnames shell-config-file
+                                              (user-homedir-pathname))
+                             :direction :output
+                             :if-exists :append
+                             :if-does-not-exist :create)
+          (format out "~&~a~%" module-path))))
     (uiop:quit)))
 
 (if *debug-mode*
