@@ -216,13 +216,15 @@ Otherwise returns nil. Test is done via equal."
          (full-name (format nil "~a-~a" name version)))
     (uiop:chdir (uiop:ensure-pathname (format nil "~abuild/" (uiop:getcwd)) :ensure-directory t :ensure-directories-exist t))
     (run (format nil "cmake ~@[-DCMAKE_C_COMPILER=~a~] ~@[-DCMAKE_CXX_COMPILER=~a~] \\
--DDEAL_II_WITH_UMFPACK=ON -DDEAL_II_WITH_LAPACK=ON -DDEAL_II_WITH_PETSC=ON -DPETSC_DIR=~a~a -DDEAL_II_WITH_P4EST=ON -DP4EST_DIR=~a~a -DDEAL_II_WITH_THREADS=OFF -DDEAL_II_WITH_MPI=ON -DDEAL_II_WITH_HDF5=OFF -DCMAKE_INSTALL_PREFIX=~a~a .."
+-DDEAL_II_WITH_UMFPACK=ON -DDEAL_II_WITH_LAPACK=ON -DDEAL_II_WITH_PETSC=ON -DPETSC_DIR=~a~a -DDEAL_II_WITH_P4EST=ON -DP4EST_DIR=~a~a -DGSL_DIR=~a~a -DDEAL_II_WITH_THREADS=OFF -DDEAL_II_WITH_MPI=ON -DDEAL_II_WITH_HDF5=OFF -DCMAKE_INSTALL_PREFIX=~a~a .."
                  *CC*
                  *CXX*
                  *install-dir*
                  (format nil "petsc-~a" (getf (package-match :name 'petsc) :version))
                  *install-dir*
                  (format nil "p4est-~a" (getf (package-match :name 'p4est) :version))
+                 *install-dir*
+                 (format nil "gsl-~a" (getf (package-match :name 'gsl) :version))
                  *install-dir* full-name))
     (run "make clean")
     (run (format nil "make ~@[-j ~a~]" *make-threads*))
@@ -363,6 +365,7 @@ if { $mode eq \"load\" || $mode eq \"switch2\" } {
   (when (or (arg-exist-p "-h") (arg-exist-p "--help"))
     (format t "-h                    Print this help text
 --help                Print this help text
+--no-fetch            Skip Download
 -j THREADS            Number of make threads
 --build-dir DIR       Build directory
                           System Default: ~a
@@ -452,7 +455,8 @@ q - Abort Installation.
                            (let* ((tarball (subseq url
                                                    (1+ (position #\/ url :from-end t))))
                                   (src-dir (remove-tgz-filetype tarball)))
-                             (progn (run (format nil "wget -nc ~a"  url))
+                             (progn (unless (arg-exist-p "--no-fetch")
+                                        (run (format nil "curl -LO ~a"  url)))
                                     (run (format nil "tar xfz ~a" tarball))
                                     (format t "src-dir ~a~%" src-dir)
                                     (uiop:ensure-directory-pathname src-dir)))))))
