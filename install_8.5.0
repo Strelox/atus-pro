@@ -65,10 +65,6 @@
   (run (format nil "make~@[ -j ~a~]~@[ ~a~]" threads arg)))
 (defun pathname-type= (pathspec type)
   (string= (pathname-type pathspec) type))
-(defun package-match (key value)
-  "Returns first plist in *packages* with <key> corresponds to <value>.
-Otherwise returns nil. Test is done via equal."
-  (find-if (lambda (x) (equal (getf x key) value)) *packages*))
 
 (defun run (cmd &key (ignore-error-status nil))
   (format t "~a ~~~a ~a~%" (uiop:getcwd) (if *root-p* "#" "$") cmd)
