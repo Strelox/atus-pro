@@ -12,18 +12,24 @@
                       (uiop:getenv "CXX")))
 
 (defvar *packages*
-  '((:name openmpi :version "2.0.2"
-     :url "https://www.open-mpi.org/software/ompi/v2.0/downloads/openmpi-2.0.2.tar.gz")
-    (:name lapack :version "3.7.0"
-     :url "http://www.netlib.org/lapack/lapack-3.7.0.tgz")
+  '((:name openmpi :version "3.0.0"
+     :url "https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz")
+    (:name lapack :version "3.8.0"
+     :url "http://www.netlib.org/lapack/lapack-3.8.0.tar.gz")
     (:name gsl :version "2.4"
      :url "ftp://ftp.gnu.org/gnu/gsl/gsl-2.4.tar.gz")
-    (:name p4est :version "1.1"
-     :url "http://p4est.github.io/release/p4est-1.1.tar.gz")
-    (:name petsc :version "3.6.3"
-     :url "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.6.3.tar.gz")
-    (:name deal.ii :version "8.4.1"
-     :url "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz")
+    (:name nlopt :version "2.4.2"
+     :url "https://github.com/stevengj/nlopt/releases/download/nlopt-2.4.2/nlopt-2.4.2.tar.gz")
+    (:name muparser :version "2.2.5"
+     :url "https://codeload.github.com/beltoforion/muparser/tar.gz/v2.2.5"
+     :path "muparser-2.2.5")
+    (:name p4est :version "2.0"
+     :url "https://p4est.github.io/release/p4est-2.0.tar.gz")
+    (:name petsc :version "3.8.2"
+     :url "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.8.2.tar.gz"
+     :path "petsc-3.8.2")
+    (:name deal.ii :version "8.5.1"
+     :url "https://github.com/dealii/dealii/releases/download/v8.5.1/dealii-8.5.1.tar.gz")
     (:name atus-pro :version "git"))
   "List of installable packages")
 
@@ -177,6 +183,30 @@ Otherwise returns nil. Test is done via equal."
     (install-module name *install-dir* version *module-dir*)
     (export-variables full-name)))
 
+;; nlopt
+(defmethod install ((sw-name (eql 'nlopt)) version)
+  "Install method for nlopt"
+  (let* ((name (string-downcase (symbol-name sw-name)))
+         (full-name (format nil "~a-~a" name version)))
+    (run (format nil "./configure --prefix=~a~a" *install-dir* full-name))
+    (run "make clean")
+    (run (format nil "make ~@[-j ~a~] CFLAGS=\"-march=native -O3\"" *make-threads*))
+    (run "make install")
+    (install-module name *install-dir* version *module-dir*)
+    (export-variables full-name)))
+
+;; muparser
+(defmethod install ((sw-name (eql 'muparser)) version)
+  "Install method for muparser"
+  (let* ((name (string-downcase (symbol-name sw-name)))
+         (full-name (format nil "~a-~a" name version)))
+    (run (format nil "./configure --prefix=~a~a" *install-dir* full-name))
+    (run "make clean")
+    (run "make CFLAGS=\"-march=native -O3\"")
+    (run "make install")
+    (install-module name *install-dir* version *module-dir*)
+    (export-variables full-name)))
+
 ;; p4est
 (defmethod install ((sw-name (eql 'p4est)) version)
   "Install method for p4est"
@@ -215,13 +245,20 @@ Otherwise returns nil. Test is done via equal."
   (let* ((name (string-downcase (symbol-name sw-name)))
          (full-name (format nil "~a-~a" name version)))
     (uiop:chdir (uiop:ensure-pathname (format nil "~abuild/" (uiop:getcwd)) :ensure-directory t :ensure-directories-exist t))
-    (run (format nil "cmake ~@[-DCMAKE_C_COMPILER=~a~] ~@[-DCMAKE_CXX_COMPILER=~a~] -DDEAL_II_WITH_UMFPACK=ON -DDEAL_II_WITH_LAPACK=ON -DDEAL_II_WITH_PETSC=ON -DPETSC_DIR=~a~a -DDEAL_II_WITH_P4EST=ON -DP4EST_DIR=~a~a -DDEAL_II_WITH_THREADS=OFF -DDEAL_II_WITH_MPI=ON -DDEAL_II_WITH_HDF5=OFF -DCMAKE_INSTALL_PREFIX=~a~a .."
+    (run (format nil "cmake ~@[-DCMAKE_C_COMPILER=~a~] ~@[-DCMAKE_CXX_COMPILER=~a~] -DCMAKE_BUILD_TYPE=\"Release\" \\
+-DDEAL_II_WITH_UMFPACK=ON -DDEAL_II_WITH_LAPACK=ON -DLAPACK_DIR=~a~a -DDEAL_II_WITH_PETSC=ON -DPETSC_DIR=~a~a -DDEAL_II_WITH_P4EST=ON -DP4EST_DIR=~a~a -DGSL_DIR=~a~a -DMUPARSER_DIR=~a~a -DDEAL_II_WITH_THREADS=OFF -DDEAL_II_WITH_MPI=ON -DDEAL_II_WITH_HDF5=OFF -DCMAKE_INSTALL_PREFIX=~a~a .."
                  *CC*
                  *CXX*
+                 *install-dir*
+                 (format nil "lapack-~a" (getf (package-match :name 'lapack) :version))                 
                  *install-dir*
                  (format nil "petsc-~a" (getf (package-match :name 'petsc) :version))
                  *install-dir*
                  (format nil "p4est-~a" (getf (package-match :name 'p4est) :version))
+                 *install-dir*
+                 (format nil "gsl-~a" (getf (package-match :name 'gsl) :version))
+                 *install-dir*
+                 (format nil "muparser-~a" (getf (package-match :name 'muparser) :version))
                  *install-dir* full-name))
     (run "make clean")
     (run (format nil "make ~@[-j ~a~]" *make-threads*))
@@ -399,7 +436,7 @@ if { $mode eq \"load\" || $mode eq \"switch2\" } {
     (mapcar (lambda (x) (check-binary-exist x t))
             (list "mpicc" "mpic++" "mpif90"  "doxygen" "make"  "cmake"))
     (mapcar (lambda (x) (check-library-exist x t))
-            (list "libmpi" "liblapack" "libgsl" "libp4est"  "libpetsc" "libdeal_II")))
+            (list "libmpi" "liblapack" "libgsl" "libmuparser" "libnlopt" "libp4est"  "libpetsc" "libdeal_II")))
 
   (format t "Current Configuration (see ./install -h):~%")
   (format t "    Current Working Directory: ~a~%" (uiop:getcwd))
@@ -412,7 +449,7 @@ if { $mode eq \"load\" || $mode eq \"switch2\" } {
       (format t "    Debug Mode: ON~%" ))
 
 
-  (unless (uiop:file-exists-p "install_8.4.1")
+  (unless (uiop:file-exists-p "install_8.5.1")
     (error "Wrong working directory: Please restart script inside atus-pro directory."))
 
   (handler-case
@@ -451,7 +488,10 @@ q - Abort Installation.
                          (uiop:with-current-directory (*build-dir*)
                            (let* ((tarball (subseq url
                                                    (1+ (position #\/ url :from-end t))))
-                                  (src-dir (remove-tgz-filetype tarball)))
+                                  (src-dir (merge-pathnames
+                                            (or (getf package :path)
+                                                (remove-tgz-filetype tarball))
+                                            (uiop:getcwd))))
                              (progn (unless (arg-exist-p "--no-fetch")
                                         (run (format nil "curl -LO ~a"  url)))
                                     (run (format nil "tar xfz ~a" tarball))
